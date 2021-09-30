@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+
+    <title>Knockout Tester App</title>
+
+    <link
+      href="https://dhqbrvplips7x.cloudfront.net/common-ui-docs/genesys-webcomponents/2.40.0-343/genesys-webcomponents/genesys-webcomponents.css"
+      rel="stylesheet"
+    />
+    <script
+      type="module"
+      src="https://dhqbrvplips7x.cloudfront.net/common-ui-docs/genesys-webcomponents/2.40.0-343/genesys-webcomponents/genesys-webcomponents.esm.js"
+    ></script>
+
+    <!-- <link href="http://localhost:8080/genesys-webcomponents/genesys-webcomponents.css" rel="stylesheet" />
+  <script type="module" src="http://localhost:8080/genesys-webcomponents/genesys-webcomponents.esm.js"></script> -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.0/knockout-min.js"></script>
+  </head>
+
+  <body>
+    <h1>Knockout@3</h1>
+    <div id="app">
+      <section data-bind="foreach:items">
+        <h2 data-bind="text: name"></h2>
+        <ul>
+          <li>
+            <!-- ko if: isElectric() -->
+            <gux-icon icon-name="bolt" decorative></gux-icon>
+            <!-- /ko -->
+
+            <!-- ko if: isFlammable() -->
+            <gux-icon icon-name="fire" decorative></gux-icon>
+            <!-- /ko -->
+
+            <!-- ko if: isColored() -->
+            <gux-icon icon-name="palette" decorative></gux-icon>
+            <!-- /ko -->
+          </li>
+        </ul>
+      </section>
+    </div>
+
+    <script>
+      function random() {
+        return Math.random() < 0.5;
+      }
+
+      function randomItem() {
+        return {
+          name: `Item ${Math.floor(Math.random() * 100)}`,
+          isElectric: () => random(),
+          isFlammable: () => random(),
+          isColored: () => random()
+        };
+      }
+
+      const items = ko.observableArray([
+        randomItem(),
+        randomItem(),
+        randomItem(),
+        randomItem(),
+        randomItem(),
+        randomItem(),
+        randomItem()
+      ]);
+
+      setInterval(() => {
+        if (random()) {
+          items.shift();
+        } else {
+          items.push(randomItem());
+        }
+      }, 2000);
+
+      ko.applyBindings({
+        items: items
+      });
+    </script>
+  </body>
+</html>
