@@ -42,6 +42,17 @@
           </li>
         </ul>
       </section>
+      <section>
+        <!-- ko if: toggle -->
+        <gux-icon id="popover-target" icon-name="fire" decorative></gux-icon>
+        <!-- /ko -->
+
+        <!-- ko if: toggle -->
+        <gux-popover id="popover-example" position="top" for="popover-target">
+          <div>popover content</div>
+        </gux-popover>
+        <!-- /ko -->
+      </section>
     </div>
 
     <script>
@@ -68,16 +79,23 @@
         randomItem()
       ]);
 
+      // setInterval(() => {
+      //   if (random()) {
+      //     items.shift();
+      //   } else {
+      //     items.push(randomItem());
+      //   }
+      // }, 2000);
+
+      let toggle = ko.observable(false);
+
       setInterval(() => {
-        if (random()) {
-          items.shift();
-        } else {
-          items.push(randomItem());
-        }
+        toggle(!toggle());
       }, 2000);
 
       ko.applyBindings({
-        items: items
+        items: items,
+        toggle: toggle
       });
     </script>
   </body>
