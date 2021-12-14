@@ -66,6 +66,13 @@ const a11yRules = [
     description:
       'Labels or instructions are provided when content requires user input',
     link: 'https://www.w3.org/WAI/WCAG21/Understanding/labels-or-instructions.html'
+  },
+  {
+    id: '413',
+    title: '4.1.3 Status Messages',
+    description:
+      'In content implemented using markup languages, status messages can be programmatically determined through role or properties such that they can be presented to the user by assistive technologies without receiving focus.',
+    link: 'https://www.w3.org/WAI/WCAG21/Understanding/status-messages.html'
   }
 ];
 
