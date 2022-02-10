@@ -239,11 +239,19 @@ export class GuxCalendar {
         this.mode === CalendarModes.Week ||
         this.mode === CalendarModes.Month
       ) {
-        // const selectedTimestamp = this.selectingDate.getTime();
-        // if (date.getTime() === selectedTimestamp) {
-        //   isSelected = true;
-        //   classes.push('gux-selected');
-        // }
+        const [start, end] =
+          this.mode === CalendarModes.Week
+            ? this.getWeekDatesRange(this.selectingDate)
+            : this.getMonthDatesRange(this.selectingDate);
+        const startTimestamp = start.getTime();
+        const endTimestamp = end.getTime();
+        if (
+          date.getTime() === startTimestamp ||
+          date.getTime() === endTimestamp
+        ) {
+          isSelected = true;
+          classes.push('gux-selected');
+        }
       }
       arr.push({
         class: classes.join(' '),
@@ -381,6 +389,22 @@ export class GuxCalendar {
     if (this.mode === CalendarModes.Range && this.selectingDate !== null) {
       this.value = asIsoDateRange(date, this.selectingDate);
       this.updateRangeElements();
+    } else if (
+      this.mode === CalendarModes.Week ||
+      this.mode === CalendarModes.Month
+    ) {
+      const [start, end] =
+        this.mode === CalendarModes.Week
+          ? this.getWeekDatesRange(date)
+          : this.getMonthDatesRange(date);
+      const rangeElements = this.getRangeDatesElements(start, end);
+      addClassToElements(rangeElements, 'gux-hovered-temp');
+    }
+  }
+
+  onDateMouseLeave() {
+    if (this.mode === CalendarModes.Week || this.mode === CalendarModes.Month) {
+      removeClassToElements(this.getAllDatesElements(), 'gux-hovered-temp');
     }
   }
 
@@ -398,11 +422,46 @@ export class GuxCalendar {
     }
   }
 
-  async onKeyDown(event: KeyboardEvent) {
+  onKeyDown(event: KeyboardEvent) {
+    switch (event.key) {
+      case ' ':
+      case 'ArrowDown':
+        event.preventDefault();
+        this.onDateMouseLeave();
+        break;
+      case 'ArrowUp': {
+        event.preventDefault();
+        this.onDateMouseLeave();
+        break;
+      }
+      case 'ArrowLeft':
+        event.preventDefault();
+        this.onDateMouseLeave();
+        break;
+      case 'ArrowRight':
+        event.preventDefault();
+        this.onDateMouseLeave();
+        break;
+      case 'PageUp':
+        this.onDateMouseLeave();
+        break;
+      case 'PageDown':
+        this.onDateMouseLeave();
+        break;
+    }
+  }
+
+  async onKeyUp(event: KeyboardEvent) {
+    const modeWeekMonth =
+      this.mode === CalendarModes.Week || this.mode === CalendarModes.Month;
+    const lastChosenDate: Date = new Date(this.selectingDate);
     switch (event.key) {
       case ' ':
       case 'Enter':
         event.preventDefault();
+        if (modeWeekMonth) {
+          this.selectingDate = this.previewValue;
+        }
         await this.onDateClick(this.previewValue);
         break;
       case 'ArrowDown':
@@ -410,9 +469,16 @@ export class GuxCalendar {
         this.previewValue = new Date(
           this.previewValue.setDate(this.previewValue.getDate() + 7)
         );
-        this.onDateMouseEnter(this.previewValue);
+        if (!modeWeekMonth) {
+          this.onDateMouseEnter(this.previewValue);
+        } else {
+          this.selectingDate = lastChosenDate;
+        }
         setTimeout(() => {
           void this.focusPreviewDate();
+          if (modeWeekMonth) {
+            this.onDateMouseEnter(this.previewValue);
+          }
         });
         break;
       case 'ArrowUp':
@@ -420,9 +486,16 @@ export class GuxCalendar {
         this.previewValue = new Date(
           this.previewValue.setDate(this.previewValue.getDate() - 7)
         );
-        this.onDateMouseEnter(this.previewValue);
+        if (!modeWeekMonth) {
+          this.onDateMouseEnter(this.previewValue);
+        } else {
+          this.selectingDate = lastChosenDate;
+        }
         setTimeout(() => {
           void this.focusPreviewDate();
+          if (modeWeekMonth) {
+            this.onDateMouseEnter(this.previewValue);
+          }
         });
         break;
       case 'ArrowLeft':
@@ -430,9 +503,16 @@ export class GuxCalendar {
         this.previewValue = new Date(
           this.previewValue.setDate(this.previewValue.getDate() - 1)
         );
-        this.onDateMouseEnter(this.previewValue);
+        if (!modeWeekMonth) {
+          this.onDateMouseEnter(this.previewValue);
+        } else {
+          this.selectingDate = lastChosenDate;
+        }
         setTimeout(() => {
           void this.focusPreviewDate();
+          if (modeWeekMonth) {
+            this.onDateMouseEnter(this.previewValue);
+          }
         });
         break;
       case 'ArrowRight':
@@ -440,9 +520,16 @@ export class GuxCalendar {
         this.previewValue = new Date(
           this.previewValue.setDate(this.previewValue.getDate() + 1)
         );
-        this.onDateMouseEnter(this.previewValue);
+        if (!modeWeekMonth) {
+          this.onDateMouseEnter(this.previewValue);
+        } else {
+          this.selectingDate = lastChosenDate;
+        }
         setTimeout(() => {
           void this.focusPreviewDate();
+          if (modeWeekMonth) {
+            this.onDateMouseEnter(this.previewValue);
+          }
         });
         break;
       case 'PageUp':
@@ -540,7 +627,9 @@ export class GuxCalendar {
                         data-date={day.date.getTime()}
                         onClick={() => void this.onDateClick(day.date)}
                         onMouseEnter={() => this.onDateMouseEnter(day.date)}
+                        onMouseLeave={() => this.onDateMouseLeave()}
                         onKeyDown={e => void this.onKeyDown(e)}
+                        onKeyUp={e => void this.onKeyUp(e)}
                       >
                         {day.date.getDate()}
                         <span class="gux-sr-only">
