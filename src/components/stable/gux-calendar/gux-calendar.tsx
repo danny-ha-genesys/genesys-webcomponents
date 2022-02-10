@@ -95,7 +95,14 @@ export class GuxCalendar {
       const [date1, date2] = value;
       this.value = asIsoDateRange(date1, date2); // sorts
       this.previewValue = fromIsoDateRange(this.value)[0];
-    } else {
+    } else if (this.mode === CalendarModes.Week && value instanceof Array) {
+      const [date1, date2] = value;
+      this.value = asIsoDateRange(date1, date2); // sorts
+      this.previewValue = this.selectingDate;
+    } else if (
+      this.mode === CalendarModes.Single ||
+      this.mode === CalendarModes.Month
+    ) {
       const selected = value as Date;
       this.value = asIsoDate(selected);
       this.previewValue = selected;
@@ -222,12 +229,21 @@ export class GuxCalendar {
           classes.push('gux-selected');
           classes.push('gux-end-date');
         }
-      } else {
+      } else if (this.mode === CalendarModes.Single) {
         const selectedTimestamp = fromIsoDate(this.value).getTime();
         if (date.getTime() === selectedTimestamp) {
           isSelected = true;
           classes.push('gux-selected');
         }
+      } else if (
+        this.mode === CalendarModes.Week ||
+        this.mode === CalendarModes.Month
+      ) {
+        // const selectedTimestamp = this.selectingDate.getTime();
+        // if (date.getTime() === selectedTimestamp) {
+        //   isSelected = true;
+        //   classes.push('gux-selected');
+        // }
       }
       arr.push({
         class: classes.join(' '),
@@ -314,11 +330,25 @@ export class GuxCalendar {
     return array;
   }
 
+  getWeekDatesRange(date: Date): [Date, Date] {
+    const curr = new Date(date);
+    const start = new Date(curr.setDate(curr.getDate() - curr.getDay()));
+    const end = new Date(curr.setDate(curr.getDate() - curr.getDay() + 6));
+    return [start, end];
+  }
+
+  getMonthDatesRange(date: Date): [Date, Date] {
+    const curr = new Date(date);
+    const start = new Date(curr.getFullYear(), curr.getMonth(), 1);
+    const end = new Date(curr.getFullYear(), curr.getMonth() + 1, 0);
+    return [start, end];
+  }
+
   async onDateClick(date: Date): Promise<void> {
     if (!this.outOfBounds(date)) {
-      if (this.mode !== CalendarModes.Range) {
+      if (this.mode === CalendarModes.Single) {
         await this.setValueAndEmit(date);
-      } else {
+      } else if (this.mode == CalendarModes.Range) {
         if (this.selectingDate === null) {
           // First click
           removeClassToElements(this.getAllDatesElements(), 'gux-hovered');
@@ -337,6 +367,12 @@ export class GuxCalendar {
           this.previewValue = date;
           this.selectingDate = null;
         }
+      } else if (this.mode === CalendarModes.Week) {
+        this.selectingDate = date;
+        await this.setValueAndEmit(this.getWeekDatesRange(date));
+      } else if (this.mode === CalendarModes.Month) {
+        this.selectingDate = date;
+        await this.setValueAndEmit(date);
       }
     }
   }
@@ -349,9 +385,14 @@ export class GuxCalendar {
   }
 
   updateRangeElements() {
-    if (this.mode === CalendarModes.Range) {
+    if (this.mode !== CalendarModes.Single) {
       removeClassToElements(this.getAllDatesElements(), 'gux-hovered');
-      const [start, end] = fromIsoDateRange(this.value);
+      const [start, end] =
+        this.mode === CalendarModes.Range
+          ? fromIsoDateRange(this.value)
+          : this.mode === CalendarModes.Week
+          ? this.getWeekDatesRange(this.selectingDate)
+          : this.getMonthDatesRange(this.selectingDate);
       const rangeElements = this.getRangeDatesElements(start, end);
       addClassToElements(rangeElements, 'gux-hovered');
     }
@@ -443,10 +484,20 @@ export class GuxCalendar {
       now.setHours(0, 0, 0, 0);
       if (this.mode === CalendarModes.Range) {
         this.value = asIsoDateRange(now, now);
-      } else {
+      } else if (this.mode === CalendarModes.Week) {
+        this.value = asIsoDateRange(now, now);
+      } else if (
+        this.mode === CalendarModes.Single ||
+        this.mode === CalendarModes.Month
+      ) {
         this.value = asIsoDate(now);
       }
     }
+
+    if (this.mode === CalendarModes.Week || this.mode === CalendarModes.Month) {
+      this.selectingDate = fromIsoDate(this.value);
+    }
+
     this.previewValue = fromIsoDate(this.value);
   }
 

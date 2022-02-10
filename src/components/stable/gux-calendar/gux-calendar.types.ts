@@ -1,6 +1,10 @@
 import { CalendarModes } from '../../../common-enums';
 
-export type GuxCalendarMode = CalendarModes.Single | CalendarModes.Range;
+export type GuxCalendarMode =
+  | CalendarModes.Single
+  | CalendarModes.Range
+  | CalendarModes.Week
+  | CalendarModes.Month;
 
 export interface IDateElement {
   class: string;

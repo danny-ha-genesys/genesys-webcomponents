@@ -6,7 +6,9 @@ export const enum ListTypeEnum {
 
 export const enum CalendarModes {
   Single = 'single',
-  Range = 'range'
+  Range = 'range',
+  Week = 'week',
+  Month = 'month'
 }
 
 export const enum ButtonAccents {
