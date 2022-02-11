@@ -80,6 +80,8 @@ export class GuxCalendar {
   input: EventEmitter<string>;
 
   private locale: string = 'en';
+  private modeWeekMonth: boolean =
+    this.mode === CalendarModes.Week || this.mode === CalendarModes.Month;
 
   emitInput() {
     this.input.emit(this.value);
@@ -167,11 +169,16 @@ export class GuxCalendar {
     return new Date(startDate.getTime() - firstDayOffset * (86400 * 1000));
   }
 
+  outOfBoundsMin(date: Date): boolean {
+    return this.minDate !== '' && fromIsoDate(this.minDate) > date;
+  }
+
+  outOfBoundsMax(date: Date): boolean {
+    return this.maxDate !== '' && fromIsoDate(this.maxDate) < date;
+  }
+
   outOfBounds(date: Date): boolean {
-    return (
-      (this.maxDate !== '' && fromIsoDate(this.maxDate) < date) ||
-      (this.minDate !== '' && fromIsoDate(this.minDate) > date)
-    );
+    return this.outOfBoundsMax(date) || this.outOfBoundsMin(date);
   }
 
   generateDatesFrom(
@@ -342,14 +349,20 @@ export class GuxCalendar {
     const curr = new Date(date);
     const start = new Date(curr.setDate(curr.getDate() - curr.getDay()));
     const end = new Date(curr.setDate(curr.getDate() - curr.getDay() + 6));
-    return [start, end];
+    return [
+      this.outOfBounds(start) ? fromIsoDate(this.minDate) : start,
+      this.outOfBounds(end) ? fromIsoDate(this.maxDate) : end
+    ];
   }
 
   getMonthDatesRange(date: Date): [Date, Date] {
     const curr = new Date(date);
     const start = new Date(curr.getFullYear(), curr.getMonth(), 1);
     const end = new Date(curr.getFullYear(), curr.getMonth() + 1, 0);
-    return [start, end];
+    return [
+      this.outOfBounds(start) ? fromIsoDate(this.minDate) : start,
+      this.outOfBounds(end) ? fromIsoDate(this.maxDate) : end
+    ];
   }
 
   async onDateClick(date: Date): Promise<void> {
@@ -403,7 +416,7 @@ export class GuxCalendar {
   }
 
   onDateMouseLeave() {
-    if (this.mode === CalendarModes.Week || this.mode === CalendarModes.Month) {
+    if (this.modeWeekMonth) {
       removeClassToElements(this.getAllDatesElements(), 'gux-hovered-temp');
     }
   }
@@ -452,14 +465,12 @@ export class GuxCalendar {
   }
 
   async onKeyUp(event: KeyboardEvent) {
-    const modeWeekMonth =
-      this.mode === CalendarModes.Week || this.mode === CalendarModes.Month;
     const lastChosenDate: Date = new Date(this.selectingDate);
     switch (event.key) {
       case ' ':
       case 'Enter':
         event.preventDefault();
-        if (modeWeekMonth) {
+        if (this.modeWeekMonth) {
           this.selectingDate = this.previewValue;
         }
         await this.onDateClick(this.previewValue);
@@ -469,14 +480,14 @@ export class GuxCalendar {
         this.previewValue = new Date(
           this.previewValue.setDate(this.previewValue.getDate() + 7)
         );
-        if (!modeWeekMonth) {
+        if (!this.modeWeekMonth) {
           this.onDateMouseEnter(this.previewValue);
         } else {
           this.selectingDate = lastChosenDate;
         }
         setTimeout(() => {
           void this.focusPreviewDate();
-          if (modeWeekMonth) {
+          if (this.modeWeekMonth) {
             this.onDateMouseEnter(this.previewValue);
           }
         });
@@ -486,14 +497,14 @@ export class GuxCalendar {
         this.previewValue = new Date(
           this.previewValue.setDate(this.previewValue.getDate() - 7)
         );
-        if (!modeWeekMonth) {
+        if (!this.modeWeekMonth) {
           this.onDateMouseEnter(this.previewValue);
         } else {
           this.selectingDate = lastChosenDate;
         }
         setTimeout(() => {
           void this.focusPreviewDate();
-          if (modeWeekMonth) {
+          if (this.modeWeekMonth) {
             this.onDateMouseEnter(this.previewValue);
           }
         });
@@ -503,14 +514,14 @@ export class GuxCalendar {
         this.previewValue = new Date(
           this.previewValue.setDate(this.previewValue.getDate() - 1)
         );
-        if (!modeWeekMonth) {
+        if (!this.modeWeekMonth) {
           this.onDateMouseEnter(this.previewValue);
         } else {
           this.selectingDate = lastChosenDate;
         }
         setTimeout(() => {
           void this.focusPreviewDate();
-          if (modeWeekMonth) {
+          if (this.modeWeekMonth) {
             this.onDateMouseEnter(this.previewValue);
           }
         });
@@ -520,14 +531,14 @@ export class GuxCalendar {
         this.previewValue = new Date(
           this.previewValue.setDate(this.previewValue.getDate() + 1)
         );
-        if (!modeWeekMonth) {
+        if (!this.modeWeekMonth) {
           this.onDateMouseEnter(this.previewValue);
         } else {
           this.selectingDate = lastChosenDate;
         }
         setTimeout(() => {
           void this.focusPreviewDate();
-          if (modeWeekMonth) {
+          if (this.modeWeekMonth) {
             this.onDateMouseEnter(this.previewValue);
           }
         });
@@ -581,11 +592,15 @@ export class GuxCalendar {
       }
     }
 
-    if (this.mode === CalendarModes.Week || this.mode === CalendarModes.Month) {
-      this.selectingDate = fromIsoDate(this.value);
+    const selectionDate = fromIsoDate(this.value);
+
+    if (this.modeWeekMonth) {
+      this.selectingDate = this.outOfBoundsMax(selectionDate)
+        ? fromIsoDate(this.maxDate)
+        : selectionDate;
     }
 
-    this.previewValue = fromIsoDate(this.value);
+    this.previewValue = this.modeWeekMonth ? this.selectingDate : selectionDate;
   }
 
   componentDidRender() {
