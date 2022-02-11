@@ -57,6 +57,19 @@ describe('gux-calendar', () => {
         expect(component.previewValue).toEqual(rangeStart);
         expect(component.value).toEqual(rangeIso);
       });
+      it('setValue with week mode', async () => {
+        component.mode = CalendarModes.Week;
+        component.selectingDate = testDate;
+        await component.setValue([rangeStart, rangeEnd]);
+        expect(component.previewValue).toEqual(testDate);
+        expect(component.value).toEqual(rangeIso);
+      });
+      it('setValue with month mode', async () => {
+        component.mode = CalendarModes.Month;
+        await component.setValue(testDate);
+        expect(component.previewValue).toEqual(testDate);
+        expect(component.value).toEqual(testDateIso);
+      });
       it('focusPreviewDate', async () => {
         await component.focusPreviewDate();
         expect(spyEl.focus).not.toHaveBeenCalled();
