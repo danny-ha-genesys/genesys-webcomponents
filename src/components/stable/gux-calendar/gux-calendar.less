@@ -112,6 +112,10 @@
         td {
           cursor: pointer;
 
+          &.gux-hovered-temp {
+            background-color: fade(@gux-blue-100, 50%);
+          }
+
           &.gux-hovered {
             background-color: @gux-blue-100;
           }
@@ -120,10 +124,6 @@
             color: @gux-grey-100;
             background-color: @gux-blue-60;
             border-radius: 4px;
-
-            &.gux-hovered-temp {
-              background-color: fade(@gux-blue-100, 50%);
-            }
 
             &.gux-hovered {
               background-color: @gux-blue-100;
