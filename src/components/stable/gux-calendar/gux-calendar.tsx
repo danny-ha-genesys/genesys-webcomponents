@@ -243,10 +243,7 @@ export class GuxCalendar {
           isSelected = true;
           classes.push('gux-selected');
         }
-      } else if (
-        this.mode === CalendarModes.Week ||
-        this.mode === CalendarModes.Month
-      ) {
+      } else if (this.modeWeekMonth) {
         const [start, end] =
           this.mode === CalendarModes.Week
             ? this.getWeekDatesRange(this.selectingDate)
@@ -404,10 +401,7 @@ export class GuxCalendar {
     if (this.mode === CalendarModes.Range && this.selectingDate !== null) {
       this.value = asIsoDateRange(date, this.selectingDate);
       this.updateRangeElements();
-    } else if (
-      this.mode === CalendarModes.Week ||
-      this.mode === CalendarModes.Month
-    ) {
+    } else if (this.modeWeekMonth) {
       const [start, end] =
         this.mode === CalendarModes.Week
           ? this.getWeekDatesRange(date)
